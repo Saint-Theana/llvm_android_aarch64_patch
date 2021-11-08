@@ -1,0 +1,53 @@
+--- llvm_android_origin/base_builders.py	2021-11-06 18:33:40.349238705 +0800
++++ llvm_android/base_builders.py	2021-11-07 05:03:00.693728565 +0800
+@@ -362,7 +362,7 @@ class CMakeBuilder(Builder):
+             'CMAKE_BUILD_TYPE': 'Release',
+             'CMAKE_INSTALL_PREFIX': str(self.install_dir),
+ 
+-            'CMAKE_MAKE_PROGRAM': str(paths.NINJA_BIN_PATH),
++            'CMAKE_MAKE_PROGRAM': str(paths.MAKE_BIN_PATH),
+ 
+             'CMAKE_FIND_ROOT_PATH_MODE_INCLUDE': 'ONLY',
+             'CMAKE_FIND_ROOT_PATH_MODE_LIBRARY': 'ONLY',
+@@ -405,7 +405,7 @@ class CMakeBuilder(Builder):
+                 shutil.rmtree(os.path.join(dirpath, 'CMakeFiles'))
+ 
+     def _ninja(self, args: list[str]) -> None:
+-        ninja_cmd = [str(paths.NINJA_BIN_PATH)] + args
++        ninja_cmd = [str(paths.MAKE_BIN_PATH)] + args
+         utils.check_call(ninja_cmd, cwd=self.output_dir, env=self.env)
+ 
+     def _build_config(self) -> None:
+@@ -415,7 +415,7 @@ class CMakeBuilder(Builder):
+         if self.remove_install_dir and self.install_dir.exists():
+             shutil.rmtree(self.install_dir)
+ 
+-        cmake_cmd: List[str] = [str(paths.CMAKE_BIN_PATH), '-G', 'Ninja']
++        cmake_cmd: List[str] = [str(paths.CMAKE_BIN_PATH), '-G', 'Unix Makefiles']
+ 
+         cmake_cmd.extend(f'-D{key}={val}' for key, val in self.cmake_defines.items())
+         cmake_cmd.append(str(self.src_dir))
+@@ -425,13 +425,13 @@ class CMakeBuilder(Builder):
+         env = self.env
+         utils.create_script(self.output_dir / 'cmake_invocation.sh', cmake_cmd, env)
+         utils.check_call(cmake_cmd, cwd=self.output_dir, env=env)
+-
++        self.ninja_targets.append("-j8")
+         self._ninja(self.ninja_targets)
+         self.install_config()
+ 
+     def install_config(self) -> None:
+         """Installs built artifacts for current config."""
+-        utils.check_call([paths.NINJA_BIN_PATH, 'install'],
++        utils.check_call([paths.MAKE_BIN_PATH, 'install'],
+                          cwd=self.output_dir, env=self.env)
+ 
+ 
+@@ -583,6 +583,7 @@ class LLVMBuilder(LLVMBaseBuilder):
+ 
+         if self.libncurses:
+             defines['LLDB_ENABLE_CURSES'] = 'ON'
++            defines['CURSES_HAVE_NCURSES_CURSES_H'] = 'ON'
+             defines['CURSES_INCLUDE_DIRS'] = str(self.libncurses.include_dir)
+             curses_libs = ';'.join(str(lib) for lib in self.libncurses.link_libraries)
+             defines['CURSES_LIBRARIES'] = curses_libs

@@ -1,0 +1,70 @@
+--- llvm_android_origin/configs.py	2021-11-06 18:33:40.349238705 +0800
++++ llvm_android/configs.py	2021-11-06 18:33:40.339238705 +0800
+@@ -156,9 +156,9 @@ class _GccConfig(_BaseConfig):  # pylint
+         gcc_lib_dir = self.gcc_root / 'lib' / 'gcc' / self.gcc_triple / self.gcc_ver
+         if self.is_32_bit:
+             gcc_lib_dir = gcc_lib_dir / '32'
+-            gcc_builtin_dir = self.gcc_root / self.gcc_triple / 'lib32'
++            gcc_builtin_dir = self.gcc_root/'lib' / self.gcc_triple
+         else:
+-            gcc_builtin_dir = self.gcc_root / self.gcc_triple / 'lib64'
++            gcc_builtin_dir = self.gcc_root/'lib' / self.gcc_triple
+         return [gcc_lib_dir, gcc_builtin_dir]
+ 
+ 
+@@ -166,10 +166,10 @@ class LinuxConfig(_GccConfig):
+     """Configuration for Linux targets."""
+ 
+     target_os: hosts.Host = hosts.Host.Linux
+-    sysroot: Optional[Path] = (paths.GCC_ROOT / 'host' / 'x86_64-linux-glibc2.17-4.8' / 'sysroot')
+-    gcc_root: Path = (paths.GCC_ROOT / 'host' / 'x86_64-linux-glibc2.17-4.8')
+-    gcc_triple: str = 'x86_64-linux'
+-    gcc_ver: str = '4.8.3'
++    sysroot: Optional[Path] = Path('/')
++    gcc_root: Path = Path('/usr')
++    gcc_triple: str = 'aarch64-linux-gnu'
++    gcc_ver: str = '7'
+ 
+     @property
+     def ldflags(self) -> List[str]:
+@@ -202,16 +202,6 @@ class MinGWConfig(_GccConfig):
+         cflags.append('-D__MSVCRT_VERSION__=0x1400')
+         return cflags
+ 
+-    @property
+-    def ldflags(self) -> List[str]:
+-        ldflags = super().ldflags
+-        ldflags.append('-Wl,--dynamicbase')
+-        ldflags.append('-Wl,--nxcompat')
+-        ldflags.append('-Wl,--high-entropy-va')
+-        ldflags.append('-Wl,--Xlink=-Brepro')
+-        return ldflags
+-
+-
+ 
+ class MSVCConfig(Config):
+     """Configuration for MSVC toolchain."""
+@@ -258,10 +248,6 @@ class MSVCConfig(Config):
+     def ldflags(self) -> List[str]:
+         return super().ldflags + [
+             '/MANIFEST:NO',
+-            '/dynamicbase',
+-            '/nxcompat',
+-            '/highentropyva',
+-            '/Brepro',
+         ]
+ 
+     @property
+@@ -365,7 +351,11 @@ class AndroidConfig(_BaseConfig):
+             # For the NDK, the sysroot has the C++ headers, but for the
+             # platform, we need to add the headers manually.
+             cxxflags.append('-nostdinc++')
+-            cxxflags.extend(f'-isystem {d}' for d in self._libcxx_header_dirs)
++            for d in self._libcxx_header_dirs:
++                if not "/usr/include/c++/" in str(d):
++                    cxxflags.append(f'-isystem {d}')
++                else:
++                    cxxflags.append('-isystem /root/llvm-toolchain/out/stage2-install/include/c++/v1')
+         return cxxflags
+ 
+     @property

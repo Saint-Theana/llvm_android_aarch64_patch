@@ -1,0 +1,11 @@
+--- llvm_android_origin/toolchains.py	2021-11-06 18:33:40.349238705 +0800
++++ llvm_android/toolchains.py	2021-11-07 06:52:38.423726056 +0800
+@@ -139,7 +139,7 @@ class Toolchain:
+ 
+     @property
+     def libcxx_headers(self) -> Path:
+-        return self.path / 'include' / 'c++' / 'v1'
++        return self.path / 'include' / 'c++' / '7'
+ 
+ 
+ def get_prebuilt_toolchain() -> Toolchain:
