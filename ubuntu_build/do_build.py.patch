@@ -33,7 +33,7 @@
                              'clang-tidy\n'
                              'clang-tidy.real\n'
 -                            '../lib64/libc++.so.1\n'
-+                            '../lib/libc++.so.1\n'
++                            '../lib64/libc++.so.1\n'
                              'lld\n'
                              'ld64.lld\n'
                              'ld.lld\n'
